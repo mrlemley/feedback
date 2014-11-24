@@ -38,21 +38,28 @@ struct pageBlock {
     string contents;
     pageBlock* next;
     pageBlock* prev;
+    //MRL: since only PageMemory should be able to change the contents of pageBlock attributes. Consider making attributes read only. 
+    //MRL: PageMemory could be a friend class.  The other option would be to have PageMemory only return copies of pageBlock so that 
+    //MRL: anyone messing with a pageBlock will not adversely affect the behavior of PageMemory.
+    
 };
 
 // PageMemory is the main memory class
 // it contains all pages and functions necessary to manage them
 
 class PageMemory {
-protected:
-    char algorithm;
-    int pageSizeKB;
+protected: //MRL: I'd go with private unless a clear need is identified. 
+    char algorithm; //MRL: since algorithms are known, an enum type would be better here. It provides documentation and avoids users providing an unknown value.
+    int pageSizeKB; //MRL: consider using unsigned integers since the value of pageSizeKB and pageTotal cannot be negative. This comment pretty much applies to all int values in this algorithm.
     int pageTotal;
     pageBlock* pageHead;
     pageBlock* pageN;
     pageBlock* pageTemp;
     //string pageMap[];
 public:
+
+    //MRL: public functions are described for developers using your class. You should describe what the function does as well as the inputs and outputs. 
+    //MRL: any error returns (throws or constant return values) should be explained so the developer knows what to expect.
     PageMemory(char);
     pageBlock* findSpace(int);
     pageBlock* findProg(string);
@@ -70,7 +77,7 @@ PageMemory::PageMemory(char algo) {
     algorithm = algo;
     pageHead = new pageBlock;
     pageHead->size = pageTotal;
-    pageHead->contents = "Free";
+    pageHead->contents = "Free"; //MRL: a constant should be used for "Free".
     pageHead->prev = NULL;
     pageHead->next = NULL;
     pageTemp = NULL;
@@ -119,8 +126,14 @@ pageBlock* PageMemory::findSpace(int size) {
 // adds a program into free memory
 
 int PageMemory::addProg(int sizeKB, string name) {
+    //MRL: what if user calls "addProg(0, "") - more error handling needed.
+    //MRL: what about "addProg(maxint +1, "")
+    //MRL: what about "addProg(1, "Free")
+    //MRL: what about "addProg(-1, "oops")
+    
     int size = ceil((sizeKB * 1.0) / pageSizeKB);
-    if (findProg(name) != NULL) return -1; //Program already running
+    if (findProg(name) != NULL) return -1; //Program already running 
+      //MRL: constants should be provided for the -1 and 0 return values. 
     pageTemp = findSpace(size);
     if (pageTemp == NULL) return 0; //Not enough memory available
     // program needs exact number of pages as are contained in the free block
@@ -158,6 +171,8 @@ pageBlock* PageMemory::findProg(string name) {
 
 // removes a program from memory and restores vacant memory to free
 int PageMemory::killProg(string name) {
+    //MRL: what about killProg("Free") will it cause any problems?
+    
     pageTemp = findProg(name);
     if (pageTemp == NULL) return 0; //Program could not be found
     int freed = pageTemp->size;
@@ -292,3 +307,5 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
+//MRL: where are the unit tests? Maybe that's outside of the scope of the project. But in real life, you wouldn't write code without them.
